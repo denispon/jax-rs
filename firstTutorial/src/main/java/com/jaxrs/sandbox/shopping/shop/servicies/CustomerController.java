@@ -1,0 +1,74 @@
+package com.jaxrs.sandbox.shopping.shop.servicies;
+
+import com.jaxrs.sandbox.shopping.shop.domain.Customer;
+import com.jaxrs.sandbox.shopping.shop.utils.Utils;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@Component
+@Path("/customers")
+public class CustomerController {
+    private Map<Integer, Customer> customerDB = new ConcurrentHashMap<>();
+    private AtomicInteger idCounter = new AtomicInteger();
+    private Utils utils = new Utils();
+
+    @POST
+    @Consumes("application/xml")
+    public Response createCustomer(InputStream is){
+        Customer customer = utils.readCustomer(is);
+        customer.setId(idCounter.incrementAndGet());
+        customerDB.put(customer.getId(), customer);
+        System.out.println("Created customer " + customer.getId());
+
+        return Response.created(URI.create("/customers/" + customer.getId())).build();
+
+    }
+
+    @GET
+    @Path("/{id}")
+    @Produces("application/xml")
+    public StreamingOutput getCustomer(@PathParam("id") int id) {
+        final Customer customer = customerDB.get(id);
+        if(customer == null){
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+        return new StreamingOutput() {
+            @Override
+            public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+                utils.outputCustomer(outputStream, customer);
+            }
+        };
+    }
+
+    @PUT
+    @Path("/{id}")
+    @Consumes("application/xml")
+    public void updateCustomer(@PathParam("id") int id, InputStream is) {
+        Customer update = utils.readCustomer(is);
+
+        Customer current = customerDB.get(id);
+
+        if(current == null){
+            throw new WebApplicationException(Response.Status.NOT_FOUND);
+        }
+
+        current.setFirstName(update.getFirstName());
+        current.setLastName(update.getLastName());
+        current.setStreet(update.getStreet());
+        current.setState(update.getState());
+        current.setZip(update.getZip());
+        current.setCountry(update.getCountry());
+    }
+
+
+}
