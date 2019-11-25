@@ -7,9 +7,10 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.*;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +26,7 @@ public class CustomerController {
     @POST
     @Consumes("application/xml")
     public Response createCustomer(InputStream is){
-        Customer customer = utils.readCustomer(is);
+        Customer customer =  Utils.convertXMLToObject(is, Customer.class);
         customer.setId(idCounter.incrementAndGet());
         customerDB.put(customer.getId(), customer);
         System.out.println("Created customer " + customer.getId());
@@ -42,12 +43,8 @@ public class CustomerController {
         if(customer == null){
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
-        return new StreamingOutput() {
-            @Override
-            public void write(OutputStream outputStream) throws IOException, WebApplicationException {
-                utils.outputCustomer(outputStream, customer);
-            }
-        };
+        return Utils.convertObjectToXML(customer);
+
     }
 
     @PUT

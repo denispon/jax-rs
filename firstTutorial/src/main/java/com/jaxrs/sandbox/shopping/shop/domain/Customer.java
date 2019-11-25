@@ -1,6 +1,13 @@
 package com.jaxrs.sandbox.shopping.shop.domain;
 
-public class Customer {
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
+public class Customer implements Serializable {
 
     private int id;
     private String firstName;

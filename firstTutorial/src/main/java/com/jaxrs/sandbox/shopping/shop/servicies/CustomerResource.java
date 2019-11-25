@@ -1,5 +1,7 @@
 package com.jaxrs.sandbox.shopping.shop.servicies;
 
+import org.springframework.stereotype.Component;
+
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;

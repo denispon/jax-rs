@@ -8,13 +8,15 @@ import org.xml.sax.SAXException;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 
 public class Utils {
 
@@ -81,6 +83,49 @@ public class Utils {
         writer.println(" <zip>" + cust.getZip() + "</zip>");
         writer.println(" <country>" + cust.getCountry() + "</country>");
         writer.println("</customer>");
+    }
+
+    public static StreamingOutput convertObjectToXML(Object object){
+
+        try{
+            JAXBContext jaxbContext = JAXBContext.newInstance(object.getClass());
+            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+            StreamingOutput streamingOutput =  new StreamingOutput() {
+                @Override
+                public void write(OutputStream outputStream) throws  WebApplicationException {
+                    PrintStream writer = new PrintStream(outputStream);
+                    try {
+                        jaxbMarshaller.marshal(object, writer);
+                    } catch (JAXBException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            return streamingOutput;
+
+
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+    public static <T> T convertXMLToObject(InputStream is, Class<T> clazz){
+        try {
+            JAXBContext jaxbContext = JAXBContext.newInstance(clazz);
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            return (T)jaxbUnmarshaller.unmarshal(is);
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        }
+        return null;
+
     }
 
 
